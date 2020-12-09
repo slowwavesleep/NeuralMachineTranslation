@@ -120,14 +120,14 @@ def training_cycle(model,
 
             best_validation_loss = mean_validation_loss
 
-            torch.save(model.state_dict(), f'best_language_model_state_dict.pth')
-            torch.save(optimizer.state_dict(), 'best_optimizer_state_dict.pth')
+            torch.save(model.state_dict(), f'models/best_language_model_state_dict.pth')
+            torch.save(optimizer.state_dict(), 'models/best_optimizer_state_dict.pth')
 
         else:
             break
 
-        torch.save(model.state_dict(), f'last_language_model_state_dict.pth')
-        torch.save(optimizer.state_dict(), 'last_optimizer_state_dict.pth')
+        torch.save(model.state_dict(), f'models/last_language_model_state_dict.pth')
+        torch.save(optimizer.state_dict(), 'models/last_optimizer_state_dict.pth')
 
         with open(f'logs/info_{n_epoch}.json', 'w') as file_object:
 
