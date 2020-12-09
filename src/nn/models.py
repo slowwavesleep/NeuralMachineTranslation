@@ -17,7 +17,7 @@ class SpatialDropout(torch.nn.Dropout2d):
         return x
 
 
-class EncoderDecoder(nn.Module):
+class BasicEncoderDecoder(nn.Module):
 
     def __init__(self,
                  vocab_size: int,

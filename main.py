@@ -3,9 +3,10 @@ import torch
 from src.utils.ted import load_ted
 from src.utils.tokenization import train_bpe, batch_tokenize
 from src.utils.loaders import get_loaders
-from src.nn.models import EncoderDecoder
+from src.nn.models import BasicEncoderDecoder
 from src.nn.training import train, evaluate
 from src.utils.loaders import shuffle_sentences
+from src.nn.translation import greedy_translate
 
 
 SOURCE_DATA_PATH = "data/ru_ted.txt"
@@ -53,12 +54,12 @@ else:
     print('Using CPU...')
     device = torch.device('cpu')
 
-model = EncoderDecoder(vocab_size=VOCAB_SIZE,
-                       emb_dim=100,
-                       model_dim=100,
-                       model_layers=1,
-                       model_dropout=0.3,
-                       padding_index=PAD_INDEX)
+model = BasicEncoderDecoder(vocab_size=VOCAB_SIZE,
+                            emb_dim=100,
+                            model_dim=100,
+                            model_layers=1,
+                            model_dropout=0.3,
+                            padding_index=PAD_INDEX)
 
 model.to(device)
 
@@ -68,42 +69,6 @@ optimizer = torch.optim.Adam(params=model.parameters())
 train(model, train_loader, criterion, optimizer, device)
 # evaluate(model, valid_loader, criterion, device)
 
-
-def greedy_translate(source,
-                     source_tokenizer,
-                     target_tokenizer,
-                     bos_index=2,
-                     eos_index=3,
-                     max_sequence=32):
-
-    # if max_sequence > MAX_LEN:
-    #     raise ValueError
-
-    tokenized = source_tokenizer.encode(source, eos=True, bos=True)
-
-    encoder_sequence = torch.tensor([tokenized]).long().to(device)
-    decoder_sequence = torch.tensor([bos_index]).long().unsqueeze(0).to(device)
-
-    model.eval()
-
-    with torch.no_grad():
-        for timestamp in range(max_sequence):
-            predictions = model(encoder_sequence, decoder_sequence)
-            current_token = predictions[:, -1, :].argmax(dim=-1)
-            if current_token == eos_index:
-                break
-            decoder_sequence = torch.cat([decoder_sequence, current_token.unsqueeze(0)], dim=-1)
-
-    answer = target_tokenizer.decode(decoder_sequence.squeeze(0).tolist())
-    answer = answer[0].lstrip('<BOS> ').rstrip('<EOS>')
-    return answer
-
-
-print(source_sentences[0])
-print(greedy_translate(source_sentences[0], source_bpe, target_bpe))
-print(source_sentences[1])
-print(greedy_translate(source_sentences[1], source_bpe, target_bpe))
-print(source_sentences[2])
-print(greedy_translate(source_sentences[2], source_bpe, target_bpe))
-print(source_sentences[3])
-print(greedy_translate(source_sentences[3], source_bpe, target_bpe))
+for sentence in source_sentences[:10]:
+    print(sentence)
+    print(greedy_translate(sentence, source_bpe, target_bpe, model, device))
