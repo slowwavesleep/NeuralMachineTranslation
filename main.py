@@ -4,10 +4,10 @@ from src.utils.ted import load_ted
 from src.utils.tokenization import train_bpe, batch_tokenize
 from src.utils.loaders import get_loaders
 from src.nn.models import BasicEncoderDecoder
-from src.nn.training import train, evaluate
+from src.nn.training import training_cycle
 from src.utils.loaders import shuffle_sentences
-from src.nn.translation import greedy_translate
-
+from src.metrics.metrics import evaluate_corpus_bleu
+from src.nn.translation import Translator
 
 SOURCE_DATA_PATH = "data/ru_ted.txt"
 TARGET_DATA_PATH = "data/fr_ted.txt"
@@ -66,9 +66,11 @@ model.to(device)
 criterion = torch.nn.CrossEntropyLoss(ignore_index=PAD_INDEX)
 optimizer = torch.optim.Adam(params=model.parameters())
 
-train(model, train_loader, criterion, optimizer, device)
-# evaluate(model, valid_loader, criterion, device)
+training_cycle(model, train_loader, valid_loader, optimizer, criterion, device, 5)
 
-for sentence in source_sentences[:10]:
-    print(sentence)
-    print(greedy_translate(sentence, source_bpe, target_bpe, model, device))
+translator = Translator(source_bpe, target_bpe, model, device)
+score = evaluate_corpus_bleu(source_sentences[:5], target_sentences[:5], translator)
+print(score)
+print(source_sentences[:5])
+print([translator.translate(sent) for sent in source_sentences[:5]])
+print(target_sentences[:5])

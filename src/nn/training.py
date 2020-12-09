@@ -4,6 +4,7 @@ import torch
 from torch.nn import Module
 from torch.utils.data import DataLoader
 from torch.optim.optimizer import Optimizer
+import json
 
 
 def train(model: Module,
@@ -20,7 +21,6 @@ def train(model: Module,
     model.train()
 
     for encoder_seq, decoder_seq, target_seq in loader:
-
         encoder_seq = encoder_seq.to(device)
         decoder_seq = decoder_seq.to(device)
         target_seq = target_seq.to(device)
@@ -51,7 +51,6 @@ def evaluate(model: Module,
              device: object,
              last_n_losses: int = 500,
              verbose: bool = True):
-
     losses = []
 
     progress_bar = tqdm(total=len(loader), disable=not verbose, desc='Evaluate')
@@ -59,7 +58,6 @@ def evaluate(model: Module,
     model.eval()
 
     for encoder_seq, decoder_seq, target_seq in loader:
-
         encoder_seq = encoder_seq.to(device)
         decoder_seq = decoder_seq.to(device)
         target_seq = target_seq.to(device)
@@ -79,3 +77,66 @@ def evaluate(model: Module,
     progress_bar.close()
 
     return losses
+
+
+def training_cycle(model,
+                   train_loader,
+                   validation_loader,
+                   optimizer,
+                   criterion,
+                   device,
+                   epochs: int = 1,
+
+                   ):
+    train_losses = []
+    validation_losses = []
+
+    train_perplexities = []
+    validation_perplexities = []
+
+    best_validation_loss = 1e+6
+
+    for n_epoch in range(1, epochs + 1):
+
+        epoch_train_losses = train(model, train_loader, criterion, optimizer, device)
+        epoch_validation_losses = evaluate(model, validation_loader, criterion, device)
+
+        mean_train_loss = np.mean(epoch_train_losses)
+        mean_validation_loss = np.mean(epoch_validation_losses)
+
+        train_losses.append(epoch_train_losses)
+        train_perplexities.append(np.exp(mean_train_loss))
+
+        validation_losses.append(epoch_validation_losses)
+        validation_perplexities.append(np.exp(mean_validation_loss))
+
+        message = f'Epoch: {n_epoch}\n'
+        message += f'Train: loss - {mean_train_loss:.4f} | perplexity - {train_perplexities[-1]:.3f}\n'
+        message += f'Validation: loss - {mean_validation_loss:.4f} | perplexity - {validation_perplexities[-1]:.3f}'
+
+        print(message)
+
+        if mean_validation_loss < best_validation_loss:
+
+            best_validation_loss = mean_validation_loss
+
+            torch.save(model.state_dict(), f'best_language_model_state_dict.pth')
+            torch.save(optimizer.state_dict(), 'best_optimizer_state_dict.pth')
+
+        else:
+            break
+
+        torch.save(model.state_dict(), f'last_language_model_state_dict.pth')
+        torch.save(optimizer.state_dict(), 'last_optimizer_state_dict.pth')
+
+        with open(f'logs/info_{n_epoch}.json', 'w') as file_object:
+
+            info = {
+                'message': message,
+                'train_losses': train_losses,
+                'validation_losses': validation_losses,
+                'train_perplexities': train_perplexities,
+                'validation_perplexities': validation_perplexities
+            }
+
+            file_object.write(json.dumps(info, indent=2))
