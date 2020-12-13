@@ -67,13 +67,16 @@ class Translator:
         :param file_path: path to resulting file
         """
 
+
+        # TODO CLEAN nextline when loading
+
         with open(file_path, 'w') as file:
             for source, target in tqdm(zip(source_sentences, target_sentences),
                                        total=len(source_sentences),
                                        desc='Translating sentences...'):
 
                 translation = self.translate(source)
-                file.write(source + '\n')
-                file.write(target + '\n')
-                file.write(translation + '\n')
-                file.write('\n')
+                file.write(source)# + '\n')
+                file.write(target)# + '\n')
+                file.write(translation)# + '\n')
+                file.write('\n\n')

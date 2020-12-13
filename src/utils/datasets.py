@@ -67,34 +67,3 @@ class MTData(Dataset):
         target_seq = Tensor(target_seq).long()
 
         return encoder_seq, decoder_seq, target_seq
-
-
-def get_loaders(source: List[List[int]],
-                target: List[List[int]],
-                train_size: float = 0.9,
-                batch_size: int = 256,
-                **kwargs) -> Tuple[DataLoader, DataLoader]:
-    """
-    Creates train and valid DataLoaders from given lists of tokenized source and target sentences.
-    :param source: lists of tokens in source language
-    :param target: lists of tokens in target language
-    :param train_size: fraction of the data to use for training
-    :param batch_size: number of elements in a single batch
-    :return: DataLoaders for source and target sentences
-    """
-    assert len(source) == len(target), '`source` and `target` must have the same number of elements!'
-
-    validation_start_index = int(len(source) * train_size)
-
-    train_ds = MTData(source[:validation_start_index],
-                      target[:validation_start_index],
-                      **kwargs)
-
-    valid_ds = MTData(source[validation_start_index:],
-                      target[validation_start_index:],
-                      **kwargs)
-
-    train_loader = DataLoader(train_ds, batch_size=batch_size, shuffle=True)
-    valid_loader = DataLoader(valid_ds, batch_size=batch_size)
-
-    return train_loader, valid_loader

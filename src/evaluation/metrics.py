@@ -14,6 +14,7 @@ def read_translations(file_path):
                 targets.append(line)
             elif position == 2:
                 hypotheses.append(line)
+
     return sources, targets, hypotheses
 
 

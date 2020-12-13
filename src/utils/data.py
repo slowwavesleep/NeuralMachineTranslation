@@ -1,4 +1,3 @@
-import random
 from random import Random
 import re
 from typing import List, Tuple, Union, NoReturn
@@ -124,9 +123,13 @@ def split_data(source: List[str],
     source_train, source_dev, source_test = source[:dev_start], source[dev_start:test_start], source[test_start:]
     target_train, target_dev, target_test = target[:dev_start], target[dev_start:test_start], target[test_start:]
 
+    assert len(source_train) == len(target_train)
+    assert len(source_dev) == len(target_dev)
+    assert len(source_test) == len(target_test)
+
     split_helper(source_train, LangDirection.source, data_path, SplitType.train)
     split_helper(source_dev, LangDirection.source, data_path, SplitType.dev)
-    split_helper(source_train, LangDirection.source, data_path, SplitType.test)
+    split_helper(source_test, LangDirection.source, data_path, SplitType.test)
 
     split_helper(target_train, LangDirection.target, data_path, SplitType.train)
     split_helper(target_dev, LangDirection.target, data_path, SplitType.dev)
