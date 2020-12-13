@@ -1,7 +1,6 @@
 from torch.utils.data import Dataset, DataLoader
 from torch import Tensor
 from typing import List, Tuple
-import random
 
 
 class MTData(Dataset):
@@ -70,22 +69,6 @@ class MTData(Dataset):
         return encoder_seq, decoder_seq, target_seq
 
 
-def shuffle_sentences(source: List[str], target: List[str]) -> Tuple[List[str], List[str]]:
-    """
-    Shuffles lists of source and target sentences simultaneously.
-    :param source: list of source sentences
-    :param target: list of target sentences
-    :return: shuffled lists of source and target sequences (source -> translation pairs are kept)
-    """
-
-    assert len(source) == len(target), '`source` and `target` must have the same number of elements!'
-
-    pairs = list(zip(source, target))
-    random.shuffle(pairs)
-    source, target = zip(*pairs)
-    return source, target
-
-
 def get_loaders(source: List[List[int]],
                 target: List[List[int]],
                 train_size: float = 0.9,
@@ -111,7 +94,7 @@ def get_loaders(source: List[List[int]],
                       target[validation_start_index:],
                       **kwargs)
 
-    train_loader = DataLoader(train_ds, batch_size=batch_size)
+    train_loader = DataLoader(train_ds, batch_size=batch_size, shuffle=True)
     valid_loader = DataLoader(valid_ds, batch_size=batch_size)
 
     return train_loader, valid_loader

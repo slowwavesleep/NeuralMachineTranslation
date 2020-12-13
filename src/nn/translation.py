@@ -1,6 +1,8 @@
 import torch
 from torch.nn import Module
 import youtokentome as yttm
+from typing import List, NoReturn
+from tqdm import tqdm
 
 
 class Translator:
@@ -23,6 +25,10 @@ class Translator:
         self.max_sequence = max_sequence
 
     def translate(self, source: str) -> str:
+        """
+        Translate one given sentence into target language.
+        :param source: sentence to translate
+        """
 
         # if max_sequence > MAX_LEN:
         #     raise ValueError
@@ -47,5 +53,27 @@ class Translator:
 
         return translation
 
-    # def batch_translate(self, source_sentences: List[str]) -> List[str]:
+    def to_file(self,
+                source_sentences: List[str],
+                target_sentences: List[str],
+                file_path: str) -> NoReturn:
+        """
+        Translate given sentences in source language and write results to file in the following format:
+        <source>
+        <target>
+        <translation>
+        :param source_sentences: sentences to translate
+        :param target_sentences: reference sentences in target language
+        :param file_path: path to resulting file
+        """
 
+        with open(file_path, 'w') as file:
+            for source, target in tqdm(zip(source_sentences, target_sentences),
+                                       total=len(source_sentences),
+                                       desc='Translating sentences...'):
+
+                translation = self.translate(source)
+                file.write(source + '\n')
+                file.write(target + '\n')
+                file.write(translation + '\n')
+                file.write('\n')

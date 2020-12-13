@@ -1,17 +1,39 @@
 import sacrebleu
-from typing import Callable, List
-from tqdm import tqdm
-from src.nn.translation import Translator
 # BLEU, ROUGE, METEOR
 
 
-def evaluate_corpus_bleu(source_sentences: List[str],
-                         target_sentences: List[str],
-                         translator: Translator) -> float:
-    hypotheses = []
-    for sentence in tqdm(source_sentences, total=len(source_sentences)):
-        hypotheses.append(translator.translate(sentence))
+def read_translations(file_path):
+    sources, targets, hypotheses = [], [], []
 
-    bleu = sacrebleu.corpus_bleu(hypotheses, [target_sentences])  # <- references expect a list of lists as input
+    with open(file_path) as file:
+        for index, line in enumerate(file):
+            position = index % 4
+            if position == 0:
+                sources.append(line)
+            elif position == 1:
+                targets.append(line)
+            elif position == 2:
+                hypotheses.append(line)
+    return sources, targets, hypotheses
+
+
+def evaluate_corpus_bleu(file_path):
+
+    sources, references, hypotheses = read_translations(file_path)
+
+    bleu = sacrebleu.corpus_bleu(hypotheses, [references])
 
     return bleu.score
+
+
+
+
+
+
+
+
+
+
+
+
+
