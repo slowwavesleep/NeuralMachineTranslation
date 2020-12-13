@@ -78,5 +78,5 @@ class Translator:
                 translation = self.translate(source)
                 file.write(source)# + '\n')
                 file.write(target)# + '\n')
-                file.write(translation)# + '\n')
-                file.write('\n\n')
+                file.write(translation + '\n')
+                file.write('\n')

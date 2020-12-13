@@ -71,6 +71,14 @@ def basic_load(file_path: str) -> List[str]:
 
 
 def basic_gzip_load(file_path: str, max_lines: int = 100_000) -> List[str]:
+    """
+    Load sentences from specified gzipped text file.
+    It is expected that archived file is going to large, thus maximum
+    amount of lines to load may be specified (100_000 by default).
+    :param file_path: path to gzip archive
+    :param max_lines: stop loading if this number is reached
+    :return: list of loaded sentences
+    """
     result = []
     with gzip.open(file_path) as file:
         for index, line in enumerate(file):
@@ -87,7 +95,7 @@ def shuffle_sentences(source: List[str],
     Shuffles lists of source and target sentences simultaneously.
     :param source: list of source sentences
     :param target: list of target sentences
-    :param seed:
+    :param seed: seed for reproducibility
     :return: shuffled lists of source and target sequences (source -> translation pairs are kept)
     """
 
