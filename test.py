@@ -1,14 +1,12 @@
-import sacrebleu
 from src.evaluation.metrics import evaluate_corpus_bleu
+import argparse
 
-r = "я спросил у тома зачем он хочет изучать французский"
-t = "я спросил у тома зачем он хочет изучать французский"
+parser = argparse.ArgumentParser(description='Evaluate BLEU score for given translations.')
+
+parser.add_argument(dest='translations_path', type=str, help='Path to translations.')
+args = parser.parse_args()
 
 
-references = [[r, r]]
-hypothesis = [t, t]
+# 'results/main/translations.txt'
 
-blue = sacrebleu.corpus_bleu(hypothesis, references)
-print(blue.score)
-
-print(evaluate_corpus_bleu('results/main/translations.txt'))
+print(evaluate_corpus_bleu(args.translations_path))
