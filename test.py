@@ -11,4 +11,4 @@ hypothesis = [t, t]
 blue = sacrebleu.corpus_bleu(hypothesis, references)
 print(blue.score)
 
-print(evaluate_corpus_bleu('results/translations.txt'))
+print(evaluate_corpus_bleu('results/main/translations.txt'))

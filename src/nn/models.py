@@ -40,6 +40,7 @@ class BasicEncoderDecoder(nn.Module):  # baseline model
                                              embedding_dim=emb_dim,
                                              padding_idx=padding_index)
 
+
         self.source_lstm = nn.LSTM(input_size=emb_dim,
                                    hidden_size=model_dim,
                                    num_layers=model_layers,
@@ -66,3 +67,56 @@ class BasicEncoderDecoder(nn.Module):  # baseline model
         decoder_seq = self.output(decoder_seq)
 
         return decoder_seq
+
+
+class FancierLstm(nn.Module):
+
+    def __init__(self,
+                 source_vocab_size,
+                 source_emb_dim,
+                 source_lstm_dim,
+                 target_vocab_size,
+                 target_emb_dim,
+                 target_lstm_dim,
+                 spatial_dropout,
+                 pad_index):
+
+        super().__init__()
+
+        self.source_embedding = nn.Embedding(num_embeddings=source_vocab_size,
+                                             embedding_dim=source_emb_dim,
+                                             padding_idx=pad_index)
+
+        self.source_lstm = nn.LSTM(input_size=source_emb_dim,
+                                   hidden_size=source_lstm_dim,
+                                   batch_first=True)
+
+        self.embedding_dropout = SpatialDropout(p=spatial_dropout)
+
+        self.target_embedding = nn.Embedding(num_embeddings=target_vocab_size,
+                                             embedding_dim=target_emb_dim,
+                                             padding_idx=pad_index)
+
+        self.target_lstm = nn.LSTM(input_size=target_emb_dim,
+                                   hidden_size=target_lstm_dim,
+                                   batch_first=True)
+
+        self.output = nn.Linear(in_features=target_lstm_dim,
+                                out_features=target_vocab_size)
+
+    def forward(self, encoder_seq, decoder_seq):
+
+        encoder_seq = self.source_embedding(encoder_seq)
+        encoder_seq = self.embedding_dropout(encoder_seq)
+        _, (hidden, cell) = self.source_lstm(encoder_seq)
+
+        decoder_seq = self.target_embedding(decoder_seq)
+        decoder_seq = self.embedding_dropout(decoder_seq)
+        decoder_seq, _ = self.target_lstm(decoder_seq, (hidden, cell))
+
+        decoder_seq = self.output(decoder_seq)
+
+        return decoder_seq
+
+
+

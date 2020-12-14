@@ -1,22 +1,27 @@
 import youtokentome as yttm
 import torch
 from torch.utils.data import DataLoader
-from src.utils.data import load_ted, load_anki, clean_anki, basic_load, basic_gzip_load
+from src.utils.data import basic_load, basic_gzip_load
 from src.utils.tokenization import train_bpe, batch_tokenize
 from src.utils.datasets import MTData
 from src.nn.models import BasicEncoderDecoder
 from src.nn.training import training_cycle
-from src.nn.translation import Translator
 
-# file paths
-SOURCE_TRAIN_PATH = "data/eng-rus/source.train"
-SOURCE_DEV_PATH = "data/eng-rus/source.dev"
-TARGET_TRAIN_PATH = "data/eng-rus/target.train"
-TARGET_DEV_PATH = "data/eng-rus/target.dev"
+# data paths
+# SOURCE_TRAIN_PATH = "data/eng-rus/source.train"
+# SOURCE_DEV_PATH = "data/eng-rus/source.dev"
+# TARGET_TRAIN_PATH = "data/eng-rus/target.train"
+# TARGET_DEV_PATH = "data/eng-rus/target.dev"
+
+SOURCE_TRAIN_PATH = "data/rus-ukr/train.src.gz"
+SOURCE_DEV_PATH = "data/rus-ukr/dev.src"
+TARGET_TRAIN_PATH = "data/rus-ukr/train.trg.gz"
+TARGET_DEV_PATH = "data/rus-ukr/dev.trg"
+
+# models paths
 BPE_TEXT_PATH = "tmp/bpe_text.tmp"
-SOURCE_BPE_PATH = "models/source_bpe.model"
-TARGET_BPE_PATH = "models/target_bpe.model"
-TRANSLATIONS_PATH = "results/translations.txt"
+SOURCE_BPE_PATH = "models/baseline/source_bpe.model"
+TARGET_BPE_PATH = "models/baseline/target_bpe.model"
 
 # model parameters
 VOCAB_SIZE = 7000
@@ -24,15 +29,15 @@ PAD_INDEX = 0
 UNK_INDEX = 1
 BOS_INDEX = 2
 EOS_INDEX = 3
-SOURCE_MAX_LEN = 16
-TARGET_MAX_LEN = 18
+SOURCE_MAX_LEN = 20
+TARGET_MAX_LEN = 20
 
-# miscellaneous
+# flow control
 TRAIN_BPE = False
 TRAIN_NET = False
 
-source_train = basic_load(SOURCE_TRAIN_PATH)
-target_train = basic_load(TARGET_TRAIN_PATH)
+source_train = basic_gzip_load(SOURCE_TRAIN_PATH)
+target_train = basic_gzip_load(TARGET_TRAIN_PATH)
 source_dev = basic_load(SOURCE_DEV_PATH)
 target_dev = basic_load(TARGET_DEV_PATH)
 
@@ -77,9 +82,9 @@ criterion = torch.nn.CrossEntropyLoss(ignore_index=PAD_INDEX)
 optimizer = torch.optim.Adam(params=model.parameters())
 
 if TRAIN_NET:
-    training_cycle(model, train_loader, valid_loader, optimizer, criterion, device, 1)
+    training_cycle(model, train_loader, valid_loader, optimizer, criterion, device, 10)
 
-model.load_state_dict(torch.load('models/best_language_model_state_dict.pth'))
+# model.load_state_dict(torch.load('models/best_language_model_state_dict.pth'))
 
-translator = Translator(source_bpe, target_bpe, model, device)
-translator.to_file(source_train[-1000:], target_train[-1000:], TRANSLATIONS_PATH)
+# translator = Translator(source_bpe, target_bpe, model, device)
+# translator.to_file(source_train[-1000:], target_train[-1000:], TRANSLATIONS_PATH)
