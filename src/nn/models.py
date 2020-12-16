@@ -1,5 +1,33 @@
 from torch import nn
 import torch
+from torch import Tensor
+import torch.nn.functional as F
+
+
+def scaled_dot_product_attention(query: Tensor,
+                                 key: Tensor,
+                                 value: Tensor) -> Tensor:
+    temp = query.bmm(key.transpose(1, 2))
+    scale = query.size(-1) ** 0.5
+    softmax = F.softmax(temp / scale, dim=-1)
+    return softmax.bmm(value)
+
+
+class AttentionHead(nn.Module):
+    def __init__(self,
+                 dim_in: int,
+                 dim_k: int,
+                 dim_v: int):
+        super().__init__()
+        self.q = nn.Linear(dim_in, dim_k)
+        self.k = nn.Linear(dim_in, dim_k)
+        self.v = nn.Linear(dim_in, dim_v)
+
+    def forward(self,
+                query: Tensor,
+                key: Tensor,
+                value: Tensor) -> Tensor:
+        return scaled_dot_product_attention(self.q(query), self.k(key), self.v(value))
 
 
 class SpatialDropout(torch.nn.Dropout2d):
@@ -17,106 +45,181 @@ class SpatialDropout(torch.nn.Dropout2d):
         return x
 
 
-class BasicEncoderDecoder(nn.Module):  # baseline model
+class LstmEncoder(nn.Module):
 
     def __init__(self,
                  vocab_size: int,
                  emb_dim: int,
-                 model_dim: int,
-                 model_layers: int,
-                 model_dropout: float,
-                 padding_index: int):
+                 hidden_size: int,
+                 lstm_layers: int = 1,
+                 layer_dropout: float = 0.,
+                 spatial_dropout: float = 0.,
+                 bidirectional: bool = False,
+                 padding_index: int = 0):
+        super(LstmEncoder, self).__init__()
 
-        super().__init__()
-
-        if model_layers < 2 and model_dropout != 0:
+        if lstm_layers < 2 and layer_dropout != 0:
             model_dropout = 0
 
-        self.source_embedding = nn.Embedding(num_embeddings=vocab_size,
-                                             embedding_dim=emb_dim,
-                                             padding_idx=padding_index)
+        self.embedding = nn.Embedding(num_embeddings=vocab_size,
+                                      embedding_dim=emb_dim,
+                                      padding_idx=padding_index)
 
-        self.target_embedding = nn.Embedding(num_embeddings=vocab_size,
-                                             embedding_dim=emb_dim,
-                                             padding_idx=padding_index)
+        self.spatial_dropout = SpatialDropout(p=spatial_dropout)
 
+        self.lstm = nn.LSTM(input_size=emb_dim,
+                            hidden_size=hidden_size,
+                            num_layers=lstm_layers,
+                            dropout=layer_dropout,
+                            bidirectional=bidirectional,
+                            batch_first=True)
 
-        self.source_lstm = nn.LSTM(input_size=emb_dim,
-                                   hidden_size=model_dim,
-                                   num_layers=model_layers,
-                                   dropout=model_dropout,
-                                   batch_first=True)
+    def forward(self, encoder_seq):
+        """
+        :param encoder_seq: tokenized source sentences
+        :return: output and memory of LSTM
+        """
 
-        self.target_lstm = nn.LSTM(input_size=emb_dim,
-                                   hidden_size=model_dim,
-                                   num_layers=model_layers,
-                                   dropout=model_dropout,
-                                   batch_first=True)
+        encoder_seq = self.embedding(encoder_seq)
 
-        self.output = nn.Linear(in_features=model_dim,
-                                out_features=vocab_size)
+        encoder_seq = self.spatial_dropout(encoder_seq)
 
-    def forward(self, encoder_seq, decoder_seq):
+        output, memory = self.lstm(encoder_seq)
 
-        encoder_seq = self.source_embedding(encoder_seq)
-        _, (hidden, cell) = self.source_lstm(encoder_seq)
-
-        decoder_seq = self.target_embedding(decoder_seq)
-        decoder_seq, _ = self.target_lstm(decoder_seq, (hidden, cell))
-
-        decoder_seq = self.output(decoder_seq)
-
-        return decoder_seq
+        return output, memory
 
 
-class FancierLstm(nn.Module):
+class LstmDecoder(nn.Module):
 
     def __init__(self,
-                 source_vocab_size,
-                 source_emb_dim,
-                 source_lstm_dim,
-                 target_vocab_size,
-                 target_emb_dim,
-                 target_lstm_dim,
+                 vocab_size: int,
+                 emb_dim: int,
+                 hidden_size: int,
+                 lstm_layers: int = 1,
+                 spatial_dropout: float = 0.,
+                 padding_index: int = 0,
+                 head: bool = True):
+
+        super(LstmDecoder, self).__init__()
+
+        self.head = head
+
+        self.lstm = nn.LSTM(input_size=emb_dim,
+                            hidden_size=hidden_size,
+                            num_layers=lstm_layers,
+                            batch_first=True)
+
+        self.spatial_dropout = SpatialDropout(p=spatial_dropout)
+
+        self.embedding = nn.Embedding(num_embeddings=vocab_size,
+                                      embedding_dim=emb_dim,
+                                      padding_idx=padding_index)
+
+        self.fc = nn.Linear(in_features=hidden_size,
+                            out_features=vocab_size)
+
+    def forward(self, decoder_seq, memory):
+        decoder_seq = self.embedding(decoder_seq)
+
+        decoder_seq = self.spatial_dropout(decoder_seq)
+
+        output, _ = self.lstm(decoder_seq, memory)
+
+        if self.head:
+            output = self.fc(output)
+
+        return output
+
+
+class BaselineModel(nn.Module):
+
+    def __init__(self,
+                 vocab_size: int,
+                 emb_dim: int,
+                 hidden_size: int,
+                 lstm_layers: int = 1,
+                 layer_dropout: float = 0.,
+                 spatial_dropout: float = 0.,
+                 bidirectional: bool = False,
+                 padding_index: int = 0):
+        super(BaselineModel, self).__init__()
+
+        self.encoder = LstmEncoder(vocab_size,
+                                   emb_dim,
+                                   hidden_size,
+                                   lstm_layers,
+                                   layer_dropout,
+                                   spatial_dropout,
+                                   bidirectional,
+                                   padding_index)
+
+        self.decoder = LstmDecoder(vocab_size,
+                                   emb_dim,
+                                   hidden_size,
+                                   lstm_layers,
+                                   spatial_dropout,
+                                   padding_index)
+
+    def forward(self, encoder_seq, decoder_seq):
+        encoder_seq, memory = self.encoder(encoder_seq)
+        output = self.decoder(decoder_seq, memory)
+
+        return output
+
+
+class LstmAttention(nn.Module):
+
+    def __init__(self,
+                 vocab_size,
+                 emb_dim,
+                 hidden_size,
+                 lstm_layers,
+                 layer_dropout,
                  spatial_dropout,
-                 pad_index):
+                 bidirectional,
+                 padding_index):
 
-        super().__init__()
+        super(LstmAttention, self).__init__()
 
-        self.source_embedding = nn.Embedding(num_embeddings=source_vocab_size,
-                                             embedding_dim=source_emb_dim,
-                                             padding_idx=pad_index)
+        self.encoder = LstmEncoder(vocab_size=vocab_size,
+                                   emb_dim=emb_dim,
+                                   hidden_size=hidden_size,
+                                   lstm_layers=lstm_layers,
+                                   layer_dropout=layer_dropout,
+                                   spatial_dropout=spatial_dropout,
+                                   bidirectional=bidirectional,
+                                   padding_index=padding_index)
 
-        self.source_lstm = nn.LSTM(input_size=source_emb_dim,
-                                   hidden_size=source_lstm_dim,
-                                   batch_first=True)
+        self.decoder = LstmDecoder(vocab_size,
+                                   emb_dim,
+                                   hidden_size,
+                                   lstm_layers,
+                                   spatial_dropout,
+                                   padding_index,
+                                   head=False)
 
-        self.embedding_dropout = SpatialDropout(p=spatial_dropout)
+        self.key_projection = nn.Linear(hidden_size, hidden_size)
+        self.value_projection = nn.Linear(hidden_size, hidden_size)
+        self.query_projection = nn.Linear(hidden_size, hidden_size)
 
-        self.target_embedding = nn.Embedding(num_embeddings=target_vocab_size,
-                                             embedding_dim=target_emb_dim,
-                                             padding_idx=pad_index)
-
-        self.target_lstm = nn.LSTM(input_size=target_emb_dim,
-                                   hidden_size=target_lstm_dim,
-                                   batch_first=True)
-
-        self.output = nn.Linear(in_features=target_lstm_dim,
-                                out_features=target_vocab_size)
+        self.fc = nn.Linear(hidden_size,
+                            vocab_size)
 
     def forward(self, encoder_seq, decoder_seq):
 
-        encoder_seq = self.source_embedding(encoder_seq)
-        encoder_seq = self.embedding_dropout(encoder_seq)
-        _, (hidden, cell) = self.source_lstm(encoder_seq)
+        encoder_seq, memory = self.encoder(encoder_seq)
 
-        decoder_seq = self.target_embedding(decoder_seq)
-        decoder_seq = self.embedding_dropout(decoder_seq)
-        decoder_seq, _ = self.target_lstm(decoder_seq, (hidden, cell))
+        decoder_seq = self.decoder(decoder_seq, memory)
 
-        decoder_seq = self.output(decoder_seq)
+        query = self.query_projection(decoder_seq)
+        key = self.key_projection(encoder_seq)
+        value = self.value_projection(encoder_seq)
 
-        return decoder_seq
+        attention = scaled_dot_product_attention(query, key, value)
+
+        output = decoder_seq + attention
+
+        return self.fc(output)
 
 
 

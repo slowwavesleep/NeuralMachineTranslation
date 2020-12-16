@@ -8,5 +8,7 @@ args = parser.parse_args()
 
 
 # 'results/main/translations.txt'
+# 'results/baseline/translations.txt'
+
 
 print(evaluate_corpus_bleu(args.translations_path))

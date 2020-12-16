@@ -4,7 +4,7 @@ from torch.utils.data import DataLoader
 from src.utils.data import basic_load, basic_gzip_load
 from src.utils.tokenization import train_bpe, batch_tokenize
 from src.utils.datasets import MTData
-from src.nn.models import BasicModel, BaselineModel
+from src.nn.models import LstmAttention
 from src.nn.training import training_cycle
 from src.nn.translation import Translator
 
@@ -77,9 +77,12 @@ else:
     device = torch.device('cpu')
 
 
-model = BaselineModel(vocab_size=VOCAB_SIZE,
+model = LstmAttention(vocab_size=VOCAB_SIZE,
                       emb_dim=300,
                       hidden_size=1000,
+                      layer_dropout=0.3,
+                      lstm_layers=2,
+                      bidirectional=False,
                       spatial_dropout=0.3,
                       padding_index=PAD_INDEX)
 
