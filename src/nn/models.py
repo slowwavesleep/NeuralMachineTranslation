@@ -2,6 +2,7 @@ from torch import nn
 import torch
 from torch import Tensor
 import torch.nn.functional as F
+from torch.nn.utils.rnn import pack_padded_sequence, pad_packed_sequence
 
 
 def scaled_dot_product_attention(query: Tensor,
@@ -75,11 +76,6 @@ class LstmEncoder(nn.Module):
                             batch_first=True)
 
     def forward(self, encoder_seq):
-        """
-        :param encoder_seq: tokenized source sentences
-        :return: output and memory of LSTM
-        """
-
         encoder_seq = self.embedding(encoder_seq)
 
         encoder_seq = self.spatial_dropout(encoder_seq)
@@ -87,6 +83,47 @@ class LstmEncoder(nn.Module):
         output, memory = self.lstm(encoder_seq)
 
         return output, memory
+
+
+class LstmEncoderPacked(LstmEncoder):
+
+    def __init__(self,
+                 vocab_size: int,
+                 emb_dim: int,
+                 hidden_size: int,
+                 lstm_layers: int = 1,
+                 layer_dropout: float = 0.,
+                 spatial_dropout: float = 0.,
+                 bidirectional: bool = False,
+                 padding_index: int = 0):
+
+        super().__init__(vocab_size,
+                         emb_dim,
+                         hidden_size,
+                         lstm_layers,
+                         layer_dropout,
+                         spatial_dropout,
+                         bidirectional,
+                         padding_index)
+
+    def forward(self, encoder_seq):
+        encoder_lens = encoder_seq.size(-1) - (encoder_seq == 0).sum(-1)
+
+        encoder_seq = self.embedding(encoder_seq)
+
+        encoder_seq = self.spatial_dropout(encoder_seq)
+
+        encoder_seq = pack_padded_sequence(input=encoder_seq,
+                                           lengths=encoder_lens,
+                                           batch_first=True,
+                                           enforce_sorted=False)
+
+        encoder_seq, memory = self.lstm(encoder_seq)
+
+        encoder_seq = pad_packed_sequence(sequence=encoder_seq,
+                                          batch_first=True)[0]
+
+        return encoder_seq, memory
 
 
 class LstmDecoder(nn.Module):
@@ -99,7 +136,6 @@ class LstmDecoder(nn.Module):
                  spatial_dropout: float = 0.,
                  padding_index: int = 0,
                  head: bool = True):
-
         super(LstmDecoder, self).__init__()
 
         self.head = head
@@ -178,17 +214,16 @@ class LstmAttention(nn.Module):
                  spatial_dropout,
                  bidirectional,
                  padding_index):
-
         super(LstmAttention, self).__init__()
 
-        self.encoder = LstmEncoder(vocab_size=vocab_size,
-                                   emb_dim=emb_dim,
-                                   hidden_size=hidden_size,
-                                   lstm_layers=lstm_layers,
-                                   layer_dropout=layer_dropout,
-                                   spatial_dropout=spatial_dropout,
-                                   bidirectional=bidirectional,
-                                   padding_index=padding_index)
+        self.encoder = LstmEncoderPacked(vocab_size=vocab_size,
+                                         emb_dim=emb_dim,
+                                         hidden_size=hidden_size,
+                                         lstm_layers=lstm_layers,
+                                         layer_dropout=layer_dropout,
+                                         spatial_dropout=spatial_dropout,
+                                         bidirectional=bidirectional,
+                                         padding_index=padding_index)
 
         self.decoder = LstmDecoder(vocab_size,
                                    emb_dim,
@@ -206,7 +241,6 @@ class LstmAttention(nn.Module):
                             vocab_size)
 
     def forward(self, encoder_seq, decoder_seq):
-
         encoder_seq, memory = self.encoder(encoder_seq)
 
         decoder_seq = self.decoder(decoder_seq, memory)
@@ -220,6 +254,3 @@ class LstmAttention(nn.Module):
         output = decoder_seq + attention
 
         return self.fc(output)
-
-
-

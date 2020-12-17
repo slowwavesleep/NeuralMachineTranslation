@@ -8,6 +8,7 @@ from src.nn.models import LstmAttention
 from src.nn.training import training_cycle
 from src.nn.translation import Translator
 
+
 # data paths
 # SOURCE_TRAIN_PATH = "data/eng-rus/source.train"
 # SOURCE_DEV_PATH = "data/eng-rus/source.dev"
