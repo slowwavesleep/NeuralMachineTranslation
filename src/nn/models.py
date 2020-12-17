@@ -14,23 +14,6 @@ def scaled_dot_product_attention(query: Tensor,
     return softmax.bmm(value)
 
 
-class AttentionHead(nn.Module):
-    def __init__(self,
-                 dim_in: int,
-                 dim_k: int,
-                 dim_v: int):
-        super().__init__()
-        self.q = nn.Linear(dim_in, dim_k)
-        self.k = nn.Linear(dim_in, dim_k)
-        self.v = nn.Linear(dim_in, dim_v)
-
-    def forward(self,
-                query: Tensor,
-                key: Tensor,
-                value: Tensor) -> Tensor:
-        return scaled_dot_product_attention(self.q(query), self.k(key), self.v(value))
-
-
 class SpatialDropout(torch.nn.Dropout2d):
 
     def __init__(self, p=0.5):
@@ -96,7 +79,6 @@ class LstmEncoderPacked(LstmEncoder):
                  spatial_dropout: float = 0.,
                  bidirectional: bool = False,
                  padding_index: int = 0):
-
         super().__init__(vocab_size,
                          emb_dim,
                          hidden_size,
@@ -167,6 +149,47 @@ class LstmDecoder(nn.Module):
         return output
 
 
+class LstmDecoderPacked(LstmDecoder):
+
+    def __init__(self,
+                 vocab_size: int,
+                 emb_dim: int,
+                 hidden_size: int,
+                 lstm_layers: int = 1,
+                 spatial_dropout: float = 0.,
+                 padding_index: int = 0,
+                 head: bool = True):
+        super().__init__(vocab_size,
+                         emb_dim,
+                         hidden_size,
+                         lstm_layers,
+                         spatial_dropout,
+                         padding_index,
+                         head)
+
+    def forward(self, decoder_seq, memory):
+        decoder_lens = decoder_seq.size(-1) - (decoder_seq == 0).sum(-1)
+
+        decoder_seq = self.embedding(decoder_seq)
+
+        decoder_seq = self.spatial_dropout(decoder_seq)
+
+        decoder_seq = pack_padded_sequence(input=decoder_seq,
+                                           lengths=decoder_lens,
+                                           batch_first=True,
+                                           enforce_sorted=False)
+
+        decoder_seq, _ = self.lstm(decoder_seq, memory)
+
+        encoder_seq = pad_packed_sequence(sequence=decoder_seq,
+                                          batch_first=True)[0]
+
+        if self.head:
+            encoder_seq = self.fc(encoder_seq)
+
+        return encoder_seq
+
+
 class BaselineModel(nn.Module):
 
     def __init__(self,
@@ -180,41 +203,43 @@ class BaselineModel(nn.Module):
                  padding_index: int = 0):
         super(BaselineModel, self).__init__()
 
-        self.encoder = LstmEncoder(vocab_size,
-                                   emb_dim,
-                                   hidden_size,
-                                   lstm_layers,
-                                   layer_dropout,
-                                   spatial_dropout,
-                                   bidirectional,
-                                   padding_index)
+        self.encoder = LstmEncoder(vocab_size=vocab_size,
+                                   emb_dim=emb_dim,
+                                   hidden_size=hidden_size,
+                                   lstm_layers=lstm_layers,
+                                   layer_dropout=layer_dropout,
+                                   spatial_dropout=spatial_dropout,
+                                   bidirectional=bidirectional,
+                                   padding_index=padding_index)
 
-        self.decoder = LstmDecoder(vocab_size,
-                                   emb_dim,
-                                   hidden_size,
-                                   lstm_layers,
-                                   spatial_dropout,
-                                   padding_index)
+        self.decoder = LstmDecoder(vocab_size=vocab_size,
+                                   emb_dim=emb_dim,
+                                   hidden_size=hidden_size,
+                                   lstm_layers=lstm_layers,
+                                   spatial_dropout=spatial_dropout,
+                                   padding_index=padding_index)
 
     def forward(self, encoder_seq, decoder_seq):
+
         encoder_seq, memory = self.encoder(encoder_seq)
         output = self.decoder(decoder_seq, memory)
 
         return output
 
 
-class LstmAttention(nn.Module):
+class LstmAttentionModel(nn.Module):
 
     def __init__(self,
-                 vocab_size,
-                 emb_dim,
-                 hidden_size,
-                 lstm_layers,
-                 layer_dropout,
-                 spatial_dropout,
-                 bidirectional,
-                 padding_index):
-        super(LstmAttention, self).__init__()
+                 vocab_size: int,
+                 emb_dim: int,
+                 hidden_size: int,
+                 lstm_layers: int,
+                 layer_dropout: float,
+                 spatial_dropout: float,
+                 bidirectional: bool,
+                 padding_index: int):
+
+        super(LstmAttentionModel, self).__init__()
 
         self.encoder = LstmEncoderPacked(vocab_size=vocab_size,
                                          emb_dim=emb_dim,
@@ -225,13 +250,13 @@ class LstmAttention(nn.Module):
                                          bidirectional=bidirectional,
                                          padding_index=padding_index)
 
-        self.decoder = LstmDecoder(vocab_size,
-                                   emb_dim,
-                                   hidden_size,
-                                   lstm_layers,
-                                   spatial_dropout,
-                                   padding_index,
-                                   head=False)
+        self.decoder = LstmDecoderPacked(vocab_size=vocab_size,
+                                         emb_dim=emb_dim,
+                                         hidden_size=hidden_size,
+                                         lstm_layers=lstm_layers,
+                                         spatial_dropout=spatial_dropout,
+                                         padding_index=padding_index,
+                                         head=False)
 
         self.key_projection = nn.Linear(hidden_size, hidden_size)
         self.value_projection = nn.Linear(hidden_size, hidden_size)
@@ -240,7 +265,10 @@ class LstmAttention(nn.Module):
         self.fc = nn.Linear(hidden_size,
                             vocab_size)
 
+        self.batch_norm = nn.BatchNorm1d(hidden_size)
+
     def forward(self, encoder_seq, decoder_seq):
+
         encoder_seq, memory = self.encoder(encoder_seq)
 
         decoder_seq = self.decoder(decoder_seq, memory)
@@ -249,8 +277,13 @@ class LstmAttention(nn.Module):
         key = self.key_projection(encoder_seq)
         value = self.value_projection(encoder_seq)
 
+        # TODO Add mask
         attention = scaled_dot_product_attention(query, key, value)
 
         output = decoder_seq + attention
+
+        output = self.batch_norm(output.permute(0, 2, 1)).permute(0, 2, 1)
+
+        # TODO Add layer norm
 
         return self.fc(output)

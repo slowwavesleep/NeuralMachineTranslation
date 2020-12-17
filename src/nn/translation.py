@@ -59,9 +59,9 @@ class Translator:
                 file_path: str) -> NoReturn:
         """
         Translate given sentences in source language and write results to file in the following format:
-        <source>
-        <target>
-        <translation>
+        <source sentence>
+        <target sentence>
+        <translation by the model>
         :param source_sentences: sentences to translate
         :param target_sentences: reference sentences in target language
         :param file_path: path to resulting file
