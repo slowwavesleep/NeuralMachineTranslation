@@ -3,7 +3,7 @@ import torch
 from torch import Tensor
 import torch.nn.functional as F
 from torch.nn.utils.rnn import pack_padded_sequence, pad_packed_sequence
-from typing import Union, List
+from typing import Union
 
 
 def scaled_dot_product_attention(query: Tensor,
@@ -59,7 +59,7 @@ class LstmEncoder(nn.Module):
                  spatial_dropout: float = 0.,
                  bidirectional: bool = False,
                  padding_index: int = 0):
-        
+
         super(LstmEncoder, self).__init__()
 
         if lstm_layers < 2 and layer_dropout != 0:
