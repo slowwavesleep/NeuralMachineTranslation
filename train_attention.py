@@ -21,12 +21,12 @@ TARGET_TRAIN_PATH = "data/rus-ukr/train.trg.gz"
 TARGET_DEV_PATH = "data/rus-ukr/dev.trg"
 SOURCE_TEST_PATH = "data/rus-ukr/test.src"
 TARGET_TEST_PATH = "data/rus-ukr/test.trg"
-TRANSLATIONS_PATH = "results/baseline/translations.txt"
+TRANSLATIONS_PATH = "results/main/translations.txt"
 
 # models paths
 BPE_TEXT_PATH = "tmp/bpe_text.tmp"
-SOURCE_BPE_PATH = "models/baseline/source_bpe.model"
-TARGET_BPE_PATH = "models/baseline/target_bpe.model"
+SOURCE_BPE_PATH = "models/main/source_bpe.model"
+TARGET_BPE_PATH = "models/main/target_bpe.model"
 
 # model parameters
 VOCAB_SIZE = 7000
