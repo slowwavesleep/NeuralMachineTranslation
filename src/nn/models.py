@@ -3,15 +3,34 @@ import torch
 from torch import Tensor
 import torch.nn.functional as F
 from torch.nn.utils.rnn import pack_padded_sequence, pad_packed_sequence
+from typing import Union, List
 
 
 def scaled_dot_product_attention(query: Tensor,
                                  key: Tensor,
-                                 value: Tensor) -> Tensor:
+                                 value: Tensor,
+                                 mask: Union[None, Tensor] = None) -> Tensor:
+
     temp = query.bmm(key.transpose(1, 2))
     scale = query.size(-1) ** 0.5
+    if mask is not None:
+        temp = temp.masked_fill(mask, float('-inf'))
     softmax = F.softmax(temp / scale, dim=-1)
     return softmax.bmm(value)
+
+
+def get_pad_mask(seq_1, seq_2):
+    # (batch_size, seq_len_1), (batch_size, seq_len_2)  -> (batch_size, seq_len_2, seq_len_1)
+    seq_len_1 = seq_1.size(-1)
+    seq_len_2 = seq_2.size(-1)
+    lens = get_non_pad_lens(seq_1)
+    masks = [torch.arange(seq_len_1).expand(seq_len_2, seq_len_1) >= true_len for true_len in lens]
+    return torch.stack(masks).cuda()
+
+
+def get_non_pad_lens(seq):
+    lens = seq.size(-1) - (seq == 0).sum(-1)
+    return lens
 
 
 class SpatialDropout(torch.nn.Dropout2d):
@@ -40,10 +59,11 @@ class LstmEncoder(nn.Module):
                  spatial_dropout: float = 0.,
                  bidirectional: bool = False,
                  padding_index: int = 0):
+        
         super(LstmEncoder, self).__init__()
 
         if lstm_layers < 2 and layer_dropout != 0:
-            model_dropout = 0
+            layer_dropout = 0
 
         self.embedding = nn.Embedding(num_embeddings=vocab_size,
                                       embedding_dim=emb_dim,
@@ -59,6 +79,7 @@ class LstmEncoder(nn.Module):
                             batch_first=True)
 
     def forward(self, encoder_seq):
+
         encoder_seq = self.embedding(encoder_seq)
 
         encoder_seq = self.spatial_dropout(encoder_seq)
@@ -79,6 +100,7 @@ class LstmEncoderPacked(LstmEncoder):
                  spatial_dropout: float = 0.,
                  bidirectional: bool = False,
                  padding_index: int = 0):
+
         super().__init__(vocab_size,
                          emb_dim,
                          hidden_size,
@@ -89,7 +111,8 @@ class LstmEncoderPacked(LstmEncoder):
                          padding_index)
 
     def forward(self, encoder_seq):
-        encoder_lens = encoder_seq.size(-1) - (encoder_seq == 0).sum(-1)
+
+        encoder_lens = get_non_pad_lens(encoder_seq)
 
         encoder_seq = self.embedding(encoder_seq)
 
@@ -118,6 +141,7 @@ class LstmDecoder(nn.Module):
                  spatial_dropout: float = 0.,
                  padding_index: int = 0,
                  head: bool = True):
+
         super(LstmDecoder, self).__init__()
 
         self.head = head
@@ -137,6 +161,7 @@ class LstmDecoder(nn.Module):
                             out_features=vocab_size)
 
     def forward(self, decoder_seq, memory):
+
         decoder_seq = self.embedding(decoder_seq)
 
         decoder_seq = self.spatial_dropout(decoder_seq)
@@ -159,6 +184,7 @@ class LstmDecoderPacked(LstmDecoder):
                  spatial_dropout: float = 0.,
                  padding_index: int = 0,
                  head: bool = True):
+
         super().__init__(vocab_size,
                          emb_dim,
                          hidden_size,
@@ -168,7 +194,8 @@ class LstmDecoderPacked(LstmDecoder):
                          head)
 
     def forward(self, decoder_seq, memory):
-        decoder_lens = decoder_seq.size(-1) - (decoder_seq == 0).sum(-1)
+
+        decoder_lens = get_non_pad_lens(decoder_seq)
 
         decoder_seq = self.embedding(decoder_seq)
 
@@ -201,6 +228,7 @@ class BaselineModel(nn.Module):
                  spatial_dropout: float = 0.,
                  bidirectional: bool = False,
                  padding_index: int = 0):
+
         super(BaselineModel, self).__init__()
 
         self.encoder = LstmEncoder(vocab_size=vocab_size,
@@ -264,6 +292,9 @@ class LstmAttentionModel(nn.Module):
                             vocab_size)
 
     def forward(self, encoder_seq, decoder_seq):
+
+        masks = get_pad_mask(encoder_seq, decoder_seq)
+
         encoder_seq, memory = self.encoder(encoder_seq)
 
         decoder_seq = self.decoder(decoder_seq, memory)
@@ -272,123 +303,9 @@ class LstmAttentionModel(nn.Module):
         key = self.key_projection(encoder_seq)
         value = self.value_projection(encoder_seq)
 
-        # TODO Add mask
-        attention = scaled_dot_product_attention(query, key, value)
+        attention = scaled_dot_product_attention(query, key, value, masks)
 
         output = decoder_seq + attention
 
-        # TODO Add layer norm
-
         return self.fc(output)
 
-
-class LayerNormLSTMCell(nn.LSTMCell):
-
-    def __init__(self, input_size, hidden_size, bias=True):
-
-        super().__init__(input_size, hidden_size, bias)
-
-        self.ln_ih = nn.LayerNorm(4 * hidden_size)
-        self.ln_hh = nn.LayerNorm(4 * hidden_size)
-        self.ln_ho = nn.LayerNorm(hidden_size)
-
-    def forward(self, x, hidden=None):
-
-        self.check_forward_input(x)
-
-        if hidden is None:
-            hx = x.new_zeros(x.size(0), self.hidden_size, requires_grad=False)
-            cx = x.new_zeros(x.size(0), self.hidden_size, requires_grad=False)
-        else:
-            hx, cx = hidden
-
-        self.check_forward_hidden(x, hx, '[0]')
-        self.check_forward_hidden(x, cx, '[1]')
-
-        gates = self.ln_ih(F.linear(x, self.weight_ih, self.bias_ih)) \
-                + self.ln_hh(F.linear(hx, self.weight_hh, self.bias_hh))
-
-        i, f, o = gates[:, :(3 * self.hidden_size)].sigmoid().chunk(3, 1)
-
-        g = gates[:, (3 * self.hidden_size):].tanh()
-
-        cy = (f * cx) + (i * g)
-        hy = o * self.ln_ho(cy).tanh()
-
-        return hy, cy
-
-
-class LayerNormLSTM(nn.Module):
-
-    def __init__(self,
-                 input_size,
-                 hidden_size,
-                 num_layers=1,
-                 bias=True,
-                 bidirectional=False):
-
-        super().__init__()
-
-        self.input_size = input_size
-        self.hidden_size = hidden_size
-        self.num_layers = num_layers
-        self.bidirectional = bidirectional
-
-        num_directions = 2 if bidirectional else 1
-
-        self.hidden0 = nn.ModuleList([
-            LayerNormLSTMCell(input_size=(input_size if layer == 0 else hidden_size * num_directions),
-                              hidden_size=hidden_size, bias=bias)
-            for layer in range(num_layers)
-        ])
-
-        if self.bidirectional:
-            self.hidden1 = nn.ModuleList([
-                LayerNormLSTMCell(input_size=(input_size if layer == 0 else hidden_size * num_directions),
-                                  hidden_size=hidden_size, bias=bias)
-                for layer in range(num_layers)
-            ])
-
-    def forward(self,
-                x,
-                hidden=None):
-
-        seq_len, batch_size, hidden_size = x.size()  # supports TxNxH only
-        num_directions = 2 if self.bidirectional else 1
-
-        if hidden is None:
-            hx = x.new_zeros(self.num_layers * num_directions, batch_size, self.hidden_size, requires_grad=False)
-            cx = x.new_zeros(self.num_layers * num_directions, batch_size, self.hidden_size, requires_grad=False)
-        else:
-            hx, cx = hidden
-
-        ht = [[None, ] * (self.num_layers * num_directions)] * seq_len
-        ct = [[None, ] * (self.num_layers * num_directions)] * seq_len
-
-        if self.bidirectional:
-            xs = x
-            for l, (layer0, layer1) in enumerate(zip(self.hidden0, self.hidden1)):
-                l0, l1 = 2 * l, 2 * l + 1
-                h0, c0, h1, c1 = hx[l0], cx[l0], hx[l1], cx[l1]
-                for t, (x0, x1) in enumerate(zip(xs, reversed(xs))):
-                    ht[t][l0], ct[t][l0] = layer0(x0, (h0, c0))
-                    h0, c0 = ht[t][l0], ct[t][l0]
-                    t = seq_len - 1 - t
-                    ht[t][l1], ct[t][l1] = layer1(x1, (h1, c1))
-                    h1, c1 = ht[t][l1], ct[t][l1]
-                xs = [torch.cat((h[l0], h[l1]), dim=1) for h in ht]
-            y = torch.stack(xs)
-            hy = torch.stack(ht[-1])
-            cy = torch.stack(ct[-1])
-        else:
-            h, c = hx, cx
-            for t, x in enumerate(x):
-                for l, layer in enumerate(self.hidden0):
-                    ht[t][l], ct[t][l] = layer(x, (h[l], c[l]))
-                    x = ht[t][l]
-                h, c = ht[t], ct[t]
-            y = torch.stack([h[-1] for h in ht])
-            hy = torch.stack(ht[-1])
-            cy = torch.stack(ct[-1])
-
-        return y, (hy, cy)

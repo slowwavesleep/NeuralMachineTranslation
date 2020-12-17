@@ -94,7 +94,7 @@ optimizer = torch.optim.Adam(params=model.parameters())
 
 if TRAIN_NET:
 
-    training_cycle(model, train_loader, valid_loader, optimizer, criterion, device, 1)
+    training_cycle(model, train_loader, valid_loader, optimizer, criterion, device, 5)
 
 if TRANSLATE_TEST:
 
