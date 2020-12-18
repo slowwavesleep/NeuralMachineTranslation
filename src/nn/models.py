@@ -12,10 +12,14 @@ def scaled_dot_product_attention(query: Tensor,
                                  mask: Union[None, Tensor] = None) -> Tensor:
 
     temp = query.bmm(key.transpose(1, 2))
+
     scale = query.size(-1) ** 0.5
+
     if mask is not None:
         temp = temp.masked_fill(mask, float('-inf'))
+
     softmax = F.softmax(temp / scale, dim=-1)
+
     return softmax.bmm(value)
 
 
@@ -110,6 +114,8 @@ class LstmEncoderPacked(LstmEncoder):
                          bidirectional,
                          padding_index)
 
+        self.layer_norm = nn.LayerNorm(emb_dim)
+
     def forward(self, encoder_seq):
 
         encoder_lens = get_non_pad_lens(encoder_seq)
@@ -117,6 +123,8 @@ class LstmEncoderPacked(LstmEncoder):
         encoder_seq = self.embedding(encoder_seq)
 
         encoder_seq = self.spatial_dropout(encoder_seq)
+
+        encoder_seq = self.layer_norm(encoder_seq)
 
         encoder_seq = pack_padded_sequence(input=encoder_seq,
                                            lengths=encoder_lens,
@@ -193,6 +201,8 @@ class LstmDecoderPacked(LstmDecoder):
                          padding_index,
                          head)
 
+        self.layer_norm = nn.LayerNorm(emb_dim)
+
     def forward(self, decoder_seq, memory):
 
         decoder_lens = get_non_pad_lens(decoder_seq)
@@ -200,6 +210,8 @@ class LstmDecoderPacked(LstmDecoder):
         decoder_seq = self.embedding(decoder_seq)
 
         decoder_seq = self.spatial_dropout(decoder_seq)
+
+        decoder_seq = self.layer_norm(decoder_seq)
 
         decoder_seq = pack_padded_sequence(input=decoder_seq,
                                            lengths=decoder_lens,
@@ -291,6 +303,8 @@ class LstmAttentionModel(nn.Module):
         self.fc = nn.Linear(hidden_size,
                             vocab_size)
 
+        self.layer_norm = nn.LayerNorm(hidden_size)
+
     def forward(self, encoder_seq, decoder_seq):
 
         masks = get_pad_mask(encoder_seq, decoder_seq)
@@ -306,6 +320,8 @@ class LstmAttentionModel(nn.Module):
         attention = scaled_dot_product_attention(query, key, value, masks)
 
         output = decoder_seq + attention
+
+        output = self.layer_norm(output)
 
         return self.fc(output)
 

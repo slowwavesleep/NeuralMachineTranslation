@@ -29,19 +29,18 @@ SOURCE_BPE_PATH = "models/main/source_bpe.model"
 TARGET_BPE_PATH = "models/main/target_bpe.model"
 
 # model parameters
-VOCAB_SIZE = 7000
+VOCAB_SIZE = 9000
 PAD_INDEX = 0
 UNK_INDEX = 1
 BOS_INDEX = 2
 EOS_INDEX = 3
-SOURCE_MAX_LEN = 20
-TARGET_MAX_LEN = 20
+SOURCE_MAX_LEN = 44
+TARGET_MAX_LEN = 43
 
 # flow control
 TRAIN_BPE = True
 TRAIN_NET = True
 TRANSLATE_TEST = True
-
 
 source_train = basic_gzip_load(SOURCE_TRAIN_PATH)
 target_train = basic_gzip_load(TARGET_TRAIN_PATH)
@@ -62,11 +61,12 @@ source_dev_tokenized = batch_tokenize(source_dev, source_bpe, bos=False, eos=Fal
 target_train_tokenized = batch_tokenize(target_train, target_bpe, bos=False, eos=False)
 target_dev_tokenized = batch_tokenize(target_dev, target_bpe, bos=False, eos=False)
 
+
 train_ds = MTData(source_train_tokenized, target_train_tokenized, SOURCE_MAX_LEN, TARGET_MAX_LEN)
 valid_ds = MTData(source_train_tokenized, target_train_tokenized, SOURCE_MAX_LEN, TARGET_MAX_LEN)
 
-train_loader = DataLoader(train_ds, batch_size=512, shuffle=True)
-valid_loader = DataLoader(valid_ds, batch_size=512)
+train_loader = DataLoader(train_ds, batch_size=256, shuffle=True)
+valid_loader = DataLoader(valid_ds, batch_size=256)
 
 GPU = torch.cuda.is_available()
 
@@ -79,10 +79,10 @@ else:
 
 
 model = LstmAttentionModel(vocab_size=VOCAB_SIZE,
-                           emb_dim=300,
-                           hidden_size=1000,
+                           emb_dim=256,
+                           hidden_size=1024,
                            layer_dropout=0.3,
-                           lstm_layers=2,
+                           lstm_layers=1,
                            bidirectional=False,
                            spatial_dropout=0.3,
                            padding_index=PAD_INDEX)
@@ -94,7 +94,7 @@ optimizer = torch.optim.Adam(params=model.parameters())
 
 if TRAIN_NET:
 
-    training_cycle(model, train_loader, valid_loader, optimizer, criterion, device, 5)
+    training_cycle(model, train_loader, valid_loader, optimizer, criterion, device, 1)
 
 if TRANSLATE_TEST:
 
