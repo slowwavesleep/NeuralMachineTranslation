@@ -23,8 +23,8 @@ parameters = config['parameters']
 flow = config['flow_control']
 net_params = config['net_parameters']
 
-source_train = smart_load(data_paths['source_train_path'], max_lines=parameters['max_lines_train'])
-target_train = smart_load(data_paths['target_train_path'], max_lines=parameters['max_lines_train'])
+source_train = smart_load(data_paths['source_train_path'], max_lines=parameters.get('max_lines_train', None))
+target_train = smart_load(data_paths['target_train_path'], max_lines=parameters.get('max_lines_train', None))
 source_dev = smart_load(data_paths['source_dev_path'])
 target_dev = smart_load(data_paths['target_dev_path'])
 
