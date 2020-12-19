@@ -4,16 +4,11 @@ from torch.utils.data import DataLoader
 from src.utils.data import basic_load, basic_gzip_load
 from src.utils.tokenization import train_bpe, batch_tokenize
 from src.utils.datasets import MTData
-from src.nn.models import BasicModel, BaselineModel
+from src.nn.models import BaselineModel
 from src.nn.training import training_cycle
 from src.nn.translation import Translator
 
 # data paths
-# SOURCE_TRAIN_PATH = "data/eng-rus/source.train"
-# SOURCE_DEV_PATH = "data/eng-rus/source.dev"
-# TARGET_TRAIN_PATH = "data/eng-rus/target.train"
-# TARGET_DEV_PATH = "data/eng-rus/target.dev"
-
 SOURCE_TRAIN_PATH = "data/rus-ukr/train.src.gz"
 SOURCE_DEV_PATH = "data/rus-ukr/dev.src"
 TARGET_TRAIN_PATH = "data/rus-ukr/train.trg.gz"

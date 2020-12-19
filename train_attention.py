@@ -8,13 +8,7 @@ from src.nn.models import LstmAttentionModel
 from src.nn.training import training_cycle
 from src.nn.translation import Translator
 
-
 # data paths
-# SOURCE_TRAIN_PATH = "data/eng-rus/source.train"
-# SOURCE_DEV_PATH = "data/eng-rus/source.dev"
-# TARGET_TRAIN_PATH = "data/eng-rus/target.train"
-# TARGET_DEV_PATH = "data/eng-rus/target.dev"
-
 SOURCE_TRAIN_PATH = "data/rus-ukr/train.src.gz"
 SOURCE_DEV_PATH = "data/rus-ukr/dev.src"
 TARGET_TRAIN_PATH = "data/rus-ukr/train.trg.gz"
@@ -80,10 +74,10 @@ else:
 
 model = LstmAttentionModel(vocab_size=VOCAB_SIZE,
                            emb_dim=256,
-                           hidden_size=1024,
+                           hidden_size=512,
                            layer_dropout=0.3,
                            lstm_layers=1,
-                           bidirectional=False,
+                           bidirectional=True,
                            spatial_dropout=0.3,
                            padding_index=PAD_INDEX)
 
@@ -94,7 +88,7 @@ optimizer = torch.optim.Adam(params=model.parameters())
 
 if TRAIN_NET:
 
-    training_cycle(model, train_loader, valid_loader, optimizer, criterion, device, 1)
+    training_cycle(model, train_loader, valid_loader, optimizer, criterion, device, 5)
 
 if TRANSLATE_TEST:
 
