@@ -47,6 +47,7 @@ if flow['train_bpe']:
 source_bpe = yttm.BPE(model=models_paths['source_bpe_path'])
 target_bpe = yttm.BPE(model=models_paths['target_bpe_path'])
 
+
 # <BOS> and <EOS> tags are added by dataset class
 source_train_tokenized = batch_tokenize(source_train, source_bpe, bos=False, eos=False)
 source_dev_tokenized = batch_tokenize(source_dev, source_bpe, bos=False, eos=False)
