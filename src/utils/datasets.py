@@ -4,6 +4,12 @@ from typing import List, Tuple
 
 
 class MTData(Dataset):
+    """
+    Dataset class for machine translation data.
+    Pads or truncates sentences to specified length.
+    Adds <bos> tokens to encoder and decoder sentences.
+    Adds <eos> tokens to target sentences.
+    """
 
     def __init__(self,
                  source: List[List[int]],
@@ -13,6 +19,15 @@ class MTData(Dataset):
                  pad_index: int = 0,
                  bos_index: int = 2,
                  eos_index: int = 3):
+        """
+        :param source: a list of sentences to translate presented as lists of indices
+        :param target: a list of reference translated sentenced presented as lists of indices
+        :param max_len_source: resulting length of all encoder sequences
+        :param max_len_target: resulting length of all decoder and target sequences
+        :param pad_index: index of <pad> token
+        :param bos_index: index of <bos> token
+        :param eos_index: index of <eos> token
+        """
 
         assert len(source) == len(target), "There must the same amount of source and target texts!"
 
@@ -46,6 +61,9 @@ class MTData(Dataset):
             return seq + pads
 
     def __getitem__(self, index) -> Tuple[Tensor, Tensor, Tensor]:
+        """
+        Returns a tuple containing tensors for encoder, decoder, and target sequences respectively.
+        """
         # it is necessary to subtract 1 to prevent long examples
         # from having mismatched length because <BOS> and <EOS>
         # tags are added after clipping an example to the max size

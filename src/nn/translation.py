@@ -28,6 +28,7 @@ class Translator:
         """
         Translate one given sentence into target language.
         :param source: sentence to translate
+        :return: translated sentence
         """
 
         # if max_sequence > MAX_LEN:
