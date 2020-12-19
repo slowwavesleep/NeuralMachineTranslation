@@ -1,7 +1,7 @@
 import youtokentome as yttm
 import torch
 from torch.utils.data import DataLoader
-from src.utils.data import basic_load, basic_gzip_load
+from src.utils.data import basic_load, smart_load
 from src.utils.tokenization import train_bpe, batch_tokenize
 from src.utils.datasets import MTData
 from src.nn.models import LstmAttentionModel
@@ -29,17 +29,26 @@ UNK_INDEX = 1
 BOS_INDEX = 2
 EOS_INDEX = 3
 SOURCE_MAX_LEN = 44
-TARGET_MAX_LEN = 43
+TARGET_MAX_LEN = 44
 
 # flow control
 TRAIN_BPE = True
 TRAIN_NET = True
 TRANSLATE_TEST = True
 
-source_train = basic_gzip_load(SOURCE_TRAIN_PATH)
-target_train = basic_gzip_load(TARGET_TRAIN_PATH)
-source_dev = basic_load(SOURCE_DEV_PATH)
-target_dev = basic_load(TARGET_DEV_PATH)
+# source_train = basic_gzip_load(SOURCE_TRAIN_PATH)
+# target_train = basic_gzip_load(TARGET_TRAIN_PATH)
+# source_dev = basic_load(SOURCE_DEV_PATH)
+# target_dev = basic_load(TARGET_DEV_PATH)
+
+
+source_train = smart_load(SOURCE_TRAIN_PATH, 500_000)
+target_train = smart_load(TARGET_TRAIN_PATH, 500_000)
+source_dev = smart_load(SOURCE_DEV_PATH)
+target_dev = smart_load(TARGET_DEV_PATH)
+
+assert len(source_train) == len(target_train)
+assert len(source_dev) == len(target_dev)
 
 if TRAIN_BPE:
     train_bpe(source_train, BPE_TEXT_PATH, SOURCE_BPE_PATH, VOCAB_SIZE)
@@ -87,7 +96,7 @@ optimizer = torch.optim.Adam(params=model.parameters())
 
 if TRAIN_NET:
 
-    training_cycle(model, train_loader, valid_loader, optimizer, criterion, device, 5)
+    training_cycle(model, train_loader, valid_loader, optimizer, criterion, device, 1)
 
 if TRANSLATE_TEST:
 

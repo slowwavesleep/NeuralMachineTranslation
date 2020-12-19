@@ -1,4 +1,4 @@
-model: baseline
+model: main
 
 data_paths:
   source_train_path: "data/rus-ukr/train.src.gz"
@@ -7,23 +7,23 @@ data_paths:
   target_dev_path: "data/rus-ukr/dev.trg"
   source_test_path: "data/rus-ukr/test.src"
   target_test_path: "data/rus-ukr/test.trg"
-  translations_path: "results/baseline/translations.txt"
+  translations_path: "results/main/translations.txt"
 
 models_paths:
   bpe_text_path: "tmp/bpe_text.tmp"
-  source_bpe_path: "models/baseline/source_bpe.model"
-  target_bpe_path: "models/baseline/target_bpe.model"
+  source_bpe_path: "models/main/source_bpe.model"
+  target_bpe_path: "models/main/target_bpe.model"
 
 parameters:
-  vocab_size: 7000
+  vocab_size: 9000
   pad_index: 0
   unk_index: 1
   bos_index: 2
   eos_index: 3
-  source_max_len: 20
-  target_max_len: 20
+  source_max_len: 44
+  target_max_len: 44
   max_lines_train: 100_000
-  batch_size: 512
+  batch_size: 256
   num_epochs: 5
 
 flow_control:
@@ -32,6 +32,9 @@ flow_control:
   translate_test: True
 
 net_parameters:
-  emb_dim: 300
-  hidden_size: 1000
+  emb_dim: 256
+  hidden_size: 512
+  layer_dropout: 0.3
+  lstm_layers: 1
+  bidirectional: True
   spatial_dropout: 0.3

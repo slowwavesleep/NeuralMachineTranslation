@@ -14,10 +14,14 @@ def scaled_dot_product_attention(query: Tensor,
 
     similarity = query.bmm(key.transpose(1, 2))
 
+    # TODO Catch bug and remove
+
+    # with open('logs/attention.log', 'a') as file:
+    #     file.write(f'q: {query.size()}, k: {key.size()}, v:{value.size()}, sim: {similarity.size()}, mask: {mask.size()}' + '\n')
+
     # scale similarity matrix by square root of number of dimensions
     scale = query.size(-1) ** 0.5
 
-    #
     if mask is not None:
         similarity = similarity.masked_fill(mask, float('-inf'))
 
@@ -95,7 +99,7 @@ class LstmAttentionModel(nn.Module):
                                          padding_index=padding_index,
                                          head=False)
 
-        self.key_projection = nn.Linear(hidden_size* self.directions, hidden_size* self.directions)
+        self.key_projection = nn.Linear(hidden_size * self.directions, hidden_size * self.directions)
         self.value_projection = nn.Linear(hidden_size * self.directions, hidden_size * self.directions)
         self.query_projection = nn.Linear(hidden_size * self.directions, hidden_size * self.directions)
 

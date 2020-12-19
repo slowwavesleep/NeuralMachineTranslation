@@ -68,9 +68,6 @@ class Translator:
         :param file_path: path to resulting file
         """
 
-
-        # TODO CLEAN nextline when loading
-
         with open(file_path, 'w') as file:
             for source, target in tqdm(zip(source_sentences, target_sentences),
                                        total=len(source_sentences),

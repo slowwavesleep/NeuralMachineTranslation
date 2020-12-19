@@ -71,7 +71,7 @@ def basic_load(file_path: str) -> List[str]:
         return [line.strip('\n') for line in lines]
 
 
-def basic_gzip_load(file_path: str, max_lines: int = 100_000) -> List[str]:
+def basic_gzip_load(file_path: str, max_lines: Union[int, None] = 100_000) -> List[str]:
     """
     Load sentences from specified gzipped text file.
     It is expected that archived file is going to large, thus maximum
@@ -84,9 +84,19 @@ def basic_gzip_load(file_path: str, max_lines: int = 100_000) -> List[str]:
     with gzip.open(file_path) as file:
         for index, line in enumerate(file):
             result.append(line.decode('utf-8').strip('\n'))
-            if index > max_lines:
+            if max_lines and index >= max_lines - 1:
                 break
     return result
+
+
+def smart_load(file_path: str, max_lines: Union[int, None] = None) -> List[str]:
+    if file_path[-3:] == '.gz':
+        return basic_gzip_load(file_path, max_lines)
+    else:
+        result = basic_load(file_path)
+        if max_lines:
+            result = result[:max_lines]
+        return result
 
 
 def shuffle_sentences(source: List[str],

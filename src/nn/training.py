@@ -5,6 +5,7 @@ from torch.nn import Module
 from torch.utils.data import DataLoader
 from torch.optim.optimizer import Optimizer
 import json
+import os
 
 
 def train(model: Module,
@@ -95,6 +96,12 @@ def training_cycle(model,
     validation_perplexities = []
 
     best_validation_loss = 1e+6
+
+    if not os.path.exists('./models'):
+        os.makedirs('./models')
+
+    if not os.path.exists('./logs'):
+        os.makedirs('./logs')
 
     for n_epoch in range(1, epochs + 1):
 
