@@ -74,8 +74,7 @@ if GPU:
     print('Using GPU...')
     device = torch.device('cuda')
 else:
-    print('Using CPU...')
-    device = torch.device('cpu')
+    raise NotImplementedError
 
 if config['model'] == 'baseline':
 
