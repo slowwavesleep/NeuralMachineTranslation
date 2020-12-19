@@ -1,6 +1,6 @@
 youtokentome==1.0.6
-pytorch==1.4.0
+torch~=1.4.0
 tqdm==4.54.1
 numpy==1.19.2
 sacrebleu==1.4.14
-pyyaml== 5.3.1
+pyyaml==5.3.1
