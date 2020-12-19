@@ -1,0 +1,40 @@
+model: main
+
+data_paths:
+  source_train_path: "data/rus-ukr/train.src.gz"
+  source_dev_path: "data/rus-ukr/dev.src"
+  target_train_path: "data/rus-ukr/train.trg.gz"
+  target_dev_path: "data/rus-ukr/dev.trg"
+  source_test_path: "data/rus-ukr/test.src"
+  target_test_path: "data/rus-ukr/test.trg"
+  translations_path: "results/colab/translations.txt"
+
+models_paths:
+  bpe_text_path: "tmp/bpe_text.tmp"
+  source_bpe_path: "models/colab/source_bpe.model"
+  target_bpe_path: "models/colab/target_bpe.model"
+
+parameters:
+  vocab_size: 9000
+  pad_index: 0
+  unk_index: 1
+  bos_index: 2
+  eos_index: 3
+  source_max_len: 66
+  target_max_len: 66
+  max_lines_train: None
+  batch_size: 512
+  num_epochs: 5
+
+flow_control:
+  train_net: True
+  train_bpe: True
+  translate_test: True
+
+net_parameters:
+  emb_dim: 256
+  hidden_size: 512
+  layer_dropout: 0.3
+  lstm_layers: 1
+  bidirectional: True
+  spatial_dropout: 0.3
