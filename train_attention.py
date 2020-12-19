@@ -41,7 +41,6 @@ target_train = basic_gzip_load(TARGET_TRAIN_PATH)
 source_dev = basic_load(SOURCE_DEV_PATH)
 target_dev = basic_load(TARGET_DEV_PATH)
 
-
 if TRAIN_BPE:
     train_bpe(source_train, BPE_TEXT_PATH, SOURCE_BPE_PATH, VOCAB_SIZE)
     train_bpe(target_train, BPE_TEXT_PATH, TARGET_BPE_PATH, VOCAB_SIZE)

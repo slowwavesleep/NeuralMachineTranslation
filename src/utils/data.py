@@ -67,7 +67,8 @@ def clean_anki(sentences: List[str]) -> List[str]:
 
 def basic_load(file_path: str) -> List[str]:
     with open(file_path) as file:
-        return file.readlines()
+        lines = file.readlines()
+        return [line.strip('\n') for line in lines]
 
 
 def basic_gzip_load(file_path: str, max_lines: int = 100_000) -> List[str]:
@@ -82,7 +83,7 @@ def basic_gzip_load(file_path: str, max_lines: int = 100_000) -> List[str]:
     result = []
     with gzip.open(file_path) as file:
         for index, line in enumerate(file):
-            result.append(line.decode('utf-8'))
+            result.append(line.decode('utf-8').strip('\n'))
             if index > max_lines:
                 break
     return result
