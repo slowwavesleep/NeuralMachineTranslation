@@ -4,7 +4,7 @@ from torch import Tensor
 import torch.nn.functional as F
 from typing import Union
 
-from src.nn.layers import LstmEncoder, LstmEncoderPacked, LstmDecoder, LstmDecoderPacked, get_pad_mask
+from src.nn.layers import LstmEncoder, LstmEncoderPacked, LstmDecoder, LstmDecoderPacked, get_pad_mask, SpatialDropout
 
 
 def scaled_dot_product_attention(query: Tensor,
@@ -108,6 +108,7 @@ class LstmAttentionModel(nn.Module):
                             vocab_size)
 
         self.layer_norm = nn.LayerNorm(hidden_size * self.directions)
+        self.spatial_dropout = SpatialDropout(p=spatial_dropout)
 
     def forward(self, encoder_seq, decoder_seq):
 
@@ -126,6 +127,8 @@ class LstmAttentionModel(nn.Module):
         output = torch.tanh(decoder_seq + attention)
 
         output = self.layer_norm(output)
+
+        output = self.spatial_dropout(output)
 
         return self.fc(output)
 
