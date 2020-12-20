@@ -13,6 +13,7 @@ def train(model: Module,
           criterion: Module,
           optimizer: Optimizer,
           device: object,
+          clip: float = 3.,
           last_n_losses: int = 500,
           verbose: bool = True):
     losses = []
@@ -32,6 +33,7 @@ def train(model: Module,
 
         optimizer.zero_grad()
         loss.backward()
+        torch.nn.utils.clip_grad_norm_(model.parameters(), clip)
         optimizer.step()
 
         losses.append(loss.item())
@@ -86,9 +88,8 @@ def training_cycle(model,
                    optimizer,
                    criterion,
                    device,
-                   epochs: int = 1,
-
-                   ):
+                   clip,
+                   epochs: int = 1):
     train_losses = []
     validation_losses = []
 
@@ -105,7 +106,7 @@ def training_cycle(model,
 
     for n_epoch in range(1, epochs + 1):
 
-        epoch_train_losses = train(model, train_loader, criterion, optimizer, device)
+        epoch_train_losses = train(model, train_loader, criterion, optimizer, device, clip)
         epoch_validation_losses = evaluate(model, validation_loader, criterion, device)
 
         mean_train_loss = np.mean(epoch_train_losses)

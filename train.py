@@ -104,7 +104,8 @@ optimizer = torch.optim.Adam(params=model.parameters())
 
 if flow['train_net']:
 
-    training_cycle(model, train_loader, valid_loader, optimizer, criterion, device, parameters['num_epochs'])
+    training_cycle(model, train_loader, valid_loader, optimizer, criterion,
+                   device, parameters.get('clip', 3.), parameters['num_epochs'])
 
 
 if flow['translate_test']:

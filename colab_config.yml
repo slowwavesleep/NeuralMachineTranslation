@@ -25,6 +25,7 @@ parameters:
   max_lines_train: 800_000
   batch_size: 512
   num_epochs: 5
+  clip: 3.
 
 flow_control:
   train_net: True
