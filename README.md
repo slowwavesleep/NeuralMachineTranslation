@@ -19,7 +19,7 @@ A report (in Russian) is available [here](report.md).
 [here](colab_train.ipynb)).
 
 
-In any case, first you'll nedd to use the following commands:
+In any case, first you'll need to use the following commands:
 
 ```
 git clone https://github.com/slowwavesleep/NeuralMachineTranslation.git
@@ -49,6 +49,18 @@ python test.py results/main/translations.txt
 ```
 
 Where the only argument specifies the location of a file to evaluate.
+
+## Results
+
+The results of the project can be found [here](/results).
+
+|Model| Num. of examples|BLEU|
+| :------------- | :----------: | -----------: |
+|Baseline|100000|2.1|
+| :------------- | :----------: | -----------: |
+|Main|100000|32.94|
+| :------------- | :----------: | -----------: |
+|Main|800000|49.55|
 
 ## Data
 
