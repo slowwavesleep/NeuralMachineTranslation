@@ -22,7 +22,7 @@ A report (in Russian) is available [here](https://github.com/slowwavesleep/Neura
 In any case, first you'll nedd to use the following commands:
 
 ```
-git clone https://github.com/slowwavesleep/NeuralMachineTranslation/blob/master/colab_train.ipynb
+git clone https://github.com/slowwavesleep/NeuralMachineTranslation.git
 ```
 
 ```
