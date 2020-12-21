@@ -15,7 +15,7 @@ A report (in Russian) is available [here](https://github.com/slowwavesleep/Neura
 ## How to reproduce
 
 **Note**: to reproduce the results locally you'll need a Unix-like system and a CUDA-compatible GPU. Alternatively, you can utilize
-[Google Colaboratory](https://colab.research.google.com/) (an example is provided 
+[Google Colaboratory](https://colab.research.google.com/) (as in an example provided 
 [here](https://github.com/slowwavesleep/NeuralMachineTranslation/blob/master/colab_train.ipynb)).
 
 
