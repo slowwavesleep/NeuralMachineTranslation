@@ -12,7 +12,7 @@ intricacies of neural machine translation.
 A report (in Russian) is available [here](report.md).
 
 
-## How to reproduce
+## How to Reproduce
 
 **Note**: to reproduce the results locally you'll need a Unix-like system and a CUDA-compatible GPU. Alternatively, you can utilize
 [Google Colaboratory](https://colab.research.google.com/) (as in an example provided 
@@ -29,7 +29,7 @@ git clone https://github.com/slowwavesleep/NeuralMachineTranslation.git
 cd NeuralMachineTranslation
 ```
 
-### Training a model
+### Training a Model
 
 To train the main model of this project run this:
 
@@ -40,7 +40,7 @@ python train.py main_config.yml
 Yaml config file contains all the necessary parameters to train the model, as well as the paths specifing where to get
 the data and where to save results and models.
 
-### Testing a model
+### Testing a Model
 
 To evaluate the results of a model run the following command:
 
@@ -68,7 +68,7 @@ Data for training and evaluation is taken from [Tatoeba Challenge](https://githu
 Model results for this data are available [here](https://github.com/Helsinki-NLP/Tatoeba-Challenge/blob/master/results/tatoeba-results-all.md).
 More specifically, the [rus-ukr pair](https://object.pouta.csc.fi/Tatoeba-Challenge/rus-ukr.tar).
 
-## Splitting arbitrary data
+## Splitting Arbitrary Data
 
 If you have aligned sentences stored in two big files, you can use `split_data.py` to conveniently split your data into train, dev, test, which
 then cand be used to train a new model, provided you specify correct file paths in yaml configuration file.
