@@ -55,7 +55,7 @@ Where the only argument specifies the location of a file to evaluate.
 Data for training and evaluation is taken from [Tatoeba Challenge](https://github.com/Helsinki-NLP/Tatoeba-Challenge/blob/master/Data.md).
 Model results for this data are available [here](https://github.com/Helsinki-NLP/Tatoeba-Challenge/blob/master/results/tatoeba-results-all.md).
 
-## Split arbitrary data
+## Splitting arbitrary data
 
 If you have aligned sentences stored in two big files, you can use `split_data.py` to conveniently split your data into train, dev, test, which
 then cand be used to train a new model, provided you specify correct file paths in yaml configuration file.
