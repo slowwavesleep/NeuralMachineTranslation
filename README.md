@@ -54,6 +54,7 @@ Where the only argument specifies the location of a file to evaluate.
 
 Data for training and evaluation is taken from [Tatoeba Challenge](https://github.com/Helsinki-NLP/Tatoeba-Challenge/blob/master/Data.md).
 Model results for this data are available [here](https://github.com/Helsinki-NLP/Tatoeba-Challenge/blob/master/results/tatoeba-results-all.md).
+More specifically, [rus-ukr](dataset).
 
 ## Splitting arbitrary data
 
