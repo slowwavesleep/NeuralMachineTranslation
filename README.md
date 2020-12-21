@@ -2,7 +2,7 @@
 
 ## About
 
-This is a repository for final project in [HSE Deep Learning in NLP Course](https://github.com/BobaZooba/HSE-Deep-Learning-in-NLP-Course). 
+This is a repository for the final project in [HSE Deep Learning in NLP Course](https://github.com/BobaZooba/HSE-Deep-Learning-in-NLP-Course). 
 The goal of the project is to develop a machine translation system that comes close in quality to an existing system. The project was
 mainly focused on translating from Russian to Ukrainian, however it is language-agnostic and, in theory, should work with any language pair.
 This particular pair was chosen mainly due to availability of a reference result obtained by a system using modern architecture and my
