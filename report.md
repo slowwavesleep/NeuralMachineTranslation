@@ -48,7 +48,7 @@
 как и [предупреждают](https://www.manythings.org/corpus/warningtatoeba.html), некоторые предложения довольно
 неестественны.
 
-В итоге остановился на [русско-укранском датасете](https://object.pouta.csc.fi/Tatoeba-Challenge/rus-ukr.tar),
+В итоге остановился на [русско-украинском датасете](https://object.pouta.csc.fi/Tatoeba-Challenge/rus-ukr.tar),
 входящим в [Tatoeba Challenge](https://github.com/Helsinki-NLP/Tatoeba-Challenge), предлагаемом Helsinki NLP.
 Основными критериями выбора были: наличие достаточно большого числа примеров, наличие тестовых данных и посчитанной
 на них метрики BLEU, а также наличие возможности самостоятельно оценить адекватность перевода.
