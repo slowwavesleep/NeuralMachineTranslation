@@ -16,7 +16,7 @@ A report (in Russian) is available [here](https://github.com/slowwavesleep/Neura
 
 **Note**: to reproduce the results locally you'll need a Unix-like system and a CUDA-compatible GPU. Alternatively, you can utilize
 [Google Colaboratory](https://colab.research.google.com/) (as in an example provided 
-[here](https://github.com/slowwavesleep/NeuralMachineTranslation/blob/master/colab_train.ipynb)).
+[here](colab_train.ipynb)).
 
 
 In any case, first you'll nedd to use the following commands:
@@ -54,7 +54,7 @@ Where the only argument specifies the location of a file to evaluate.
 
 Data for training and evaluation is taken from [Tatoeba Challenge](https://github.com/Helsinki-NLP/Tatoeba-Challenge/blob/master/Data.md).
 Model results for this data are available [here](https://github.com/Helsinki-NLP/Tatoeba-Challenge/blob/master/results/tatoeba-results-all.md).
-More specifically, [rus-ukr](dataset).
+More specifically, [rus-ukr dataset](https://object.pouta.csc.fi/Tatoeba-Challenge/rus-ukr.tar).
 
 ## Splitting arbitrary data
 
