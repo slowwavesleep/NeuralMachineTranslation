@@ -52,7 +52,9 @@ Where the only argument specifies the location of a file to evaluate.
 
 ## Results
 
-The results of the project can be found [here](/results).
+The translations done by models in this project can be found [here](/results).
+
+The results are presented below.
 
 |Model| Num. of examples|BLEU|
 |:-------------|:----------:|-----------:|
