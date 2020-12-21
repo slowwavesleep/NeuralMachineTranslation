@@ -9,7 +9,7 @@ This particular pair was chosen mainly due to availability of a reference result
 personal ability to manually gauge the quality of translations, as well as the possibility of getting some linguistic insight on the
 intricacies of neural machine translation.
 
-A report (in Russian) is available [here](https://github.com/slowwavesleep/NeuralMachineTranslation/blob/master/report.md).
+A report (in Russian) is available [here](report.md).
 
 
 ## How to reproduce
