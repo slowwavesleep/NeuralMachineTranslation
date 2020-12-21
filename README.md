@@ -55,11 +55,9 @@ Where the only argument specifies the location of a file to evaluate.
 The results of the project can be found [here](/results).
 
 |Model| Num. of examples|BLEU|
-| :------------- | :----------: | -----------: |
+|:-------------|:----------:|-----------:|
 |Baseline|100000|2.1|
-| :------------- | :----------: | -----------: |
 |Main|100000|32.94|
-| :------------- | :----------: | -----------: |
 |Main|800000|49.55|
 
 ## Data
