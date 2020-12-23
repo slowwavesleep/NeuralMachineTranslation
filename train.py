@@ -60,8 +60,8 @@ train_ds = MTData(source_train_tokenized,
                   parameters['source_max_len'],
                   parameters['target_max_len'])
 
-valid_ds = MTData(source_train_tokenized,
-                  target_train_tokenized,
+valid_ds = MTData(source_dev_tokenized,
+                  target_dev_tokenized,
                   parameters['source_max_len'],
                   parameters['target_max_len'])
 

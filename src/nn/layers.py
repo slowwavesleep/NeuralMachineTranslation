@@ -86,6 +86,8 @@ class LstmEncoderPacked(LstmEncoder):
 
     def forward(self, encoder_seq):
 
+        initial_len = encoder_seq.size(-1)
+
         encoder_lens = get_non_pad_lens(encoder_seq)
 
         encoder_seq = self.embedding(encoder_seq)
@@ -102,7 +104,8 @@ class LstmEncoderPacked(LstmEncoder):
         encoder_seq, memory = self.lstm(encoder_seq)
 
         encoder_seq = pad_packed_sequence(sequence=encoder_seq,
-                                          batch_first=True)[0]
+                                          batch_first=True,
+                                          total_length=initial_len)[0]
 
         if self.bidirectional:
             hidden, cell = memory
@@ -181,6 +184,8 @@ class LstmDecoderPacked(LstmDecoder):
 
     def forward(self, decoder_seq, memory):
 
+        initial_len = decoder_seq.size(-1)
+
         decoder_lens = get_non_pad_lens(decoder_seq)
 
         decoder_seq = self.embedding(decoder_seq)
@@ -197,7 +202,8 @@ class LstmDecoderPacked(LstmDecoder):
         decoder_seq, _ = self.lstm(decoder_seq, memory)
 
         decoder_seq = pad_packed_sequence(sequence=decoder_seq,
-                                          batch_first=True)[0]
+                                          batch_first=True,
+                                          total_length=initial_len)[0]
 
         if self.head:
             decoder_seq = self.fc(decoder_seq)
