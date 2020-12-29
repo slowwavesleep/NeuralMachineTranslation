@@ -14,12 +14,6 @@ def scaled_dot_product_attention(query: Tensor,
 
     similarity = query.bmm(key.transpose(1, 2))
 
-    # TODO Catch bug and remove
-
-    # with open('logs/attention.log', 'a') as file:
-    #     file.write(f'q: {query.size()}, k: {key.size()}, v:{value.size()}, sim: {similarity.size()},' +
-    #                f' mask: {mask.size()}' + '\n')
-
     # scale similarity matrix by square root of number of dimensions
     scale = query.size(-1) ** 0.5
 

@@ -31,9 +31,6 @@ class Translator:
         :return: translated sentence
         """
 
-        # if max_sequence > MAX_LEN:
-        #     raise ValueError
-
         tokenized = self.source_tokenizer.encode(source, eos=False, bos=True)
 
         encoder_sequence = torch.tensor([tokenized]).long().to(self.device)
