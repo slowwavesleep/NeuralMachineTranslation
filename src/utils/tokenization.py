@@ -1,7 +1,8 @@
-import youtokentome as yttm
 from typing import List, NoReturn
 import os
 import math
+
+import youtokentome as yttm
 
 
 # TODO Add dir check

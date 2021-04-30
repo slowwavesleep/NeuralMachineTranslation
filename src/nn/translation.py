@@ -1,7 +1,8 @@
+from typing import List, NoReturn
+
 import torch
 from torch.nn import Module
 import youtokentome as yttm
-from typing import List, NoReturn
 from tqdm import tqdm
 
 

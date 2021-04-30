@@ -1,11 +1,12 @@
+import json
+import os
+
 import numpy as np
 from tqdm import tqdm
 import torch
 from torch.nn import Module
 from torch.utils.data import DataLoader
 from torch.optim.optimizer import Optimizer
-import json
-import os
 
 
 def train(model: Module,

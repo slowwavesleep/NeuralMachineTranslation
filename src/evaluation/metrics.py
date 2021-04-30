@@ -1,5 +1,6 @@
-import sacrebleu
 from typing import Tuple, List
+
+import sacrebleu
 
 
 def read_translations(file_path: str) -> Tuple[List[str], List[str], List[str]]:

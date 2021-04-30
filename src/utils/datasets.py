@@ -1,6 +1,7 @@
+from typing import List, Tuple
+
 from torch.utils.data import Dataset
 from torch import Tensor
-from typing import List, Tuple
 
 
 class MTData(Dataset):

@@ -1,13 +1,16 @@
+import argparse
+
 from yaml import safe_load
 import youtokentome as yttm
 import torch
 from torch.utils.data import DataLoader
+
 from src.utils.data import basic_load, smart_load
 from src.utils.tokenization import train_bpe, batch_tokenize
 from src.utils.datasets import MTData
 from src.nn.training import training_cycle
 from src.nn.translation import Translator
-import argparse
+
 
 parser = argparse.ArgumentParser(description='Run model with specified settings.')
 

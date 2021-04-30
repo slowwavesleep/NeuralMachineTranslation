@@ -1,5 +1,7 @@
-from src.evaluation.metrics import evaluate_corpus_bleu
 import argparse
+
+from src.evaluation.metrics import evaluate_corpus_bleu
+
 
 parser = argparse.ArgumentParser(description='Evaluate BLEU score for given translations.')
 
